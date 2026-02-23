@@ -1,0 +1,595 @@
+<!-- TRUST FEELING CHECK-IN (1 Question) — ANewSpring-ready HTML (single file) -->
+<!-- Paste into an ANewSpring HTML content part. No external libraries needed. -->
+
+<div class="trust-checkin" role="region" aria-label="Trust feeling check-in">
+  <div class="tc-card">
+    <div class="tc-header">
+      <div class="tc-eyebrow">Trust Snapshot • 1-question check-in</div>
+      <h2 class="tc-title">How does trust feel in your current work?</h2>
+      <p class="tc-subtitle">
+        Choose <strong>one</strong> word that best matches your current experience.
+        There’s no right or wrong answer—this is just a quick reflection.
+      </p>
+    </div>
+
+    <div class="tc-grid" aria-label="Choices">
+      <!-- Lower-trust / heavy feelings -->
+      <button class="tc-chip" type="button" data-key="exclusion" data-group="heavy">Exclusion</button>
+      <button class="tc-chip" type="button" data-key="disappointment" data-group="heavy">Disappointment</button>
+      <button class="tc-chip" type="button" data-key="unsure" data-group="heavy">Unsure</button>
+      <button class="tc-chip" type="button" data-key="frustration" data-group="heavy">Frustration</button>
+      <button class="tc-chip" type="button" data-key="fearful" data-group="heavy">Fearful</button>
+      <button class="tc-chip" type="button" data-key="insecure" data-group="heavy">Insecure</button>
+      <button class="tc-chip" type="button" data-key="angry" data-group="heavy">Angry</button>
+
+      <!-- Higher-trust / light feelings -->
+      <button class="tc-chip" type="button" data-key="clear" data-group="light">Clear</button>
+      <button class="tc-chip" type="button" data-key="approachable" data-group="light">Approachable</button>
+      <button class="tc-chip" type="button" data-key="accepting" data-group="light">Accepting</button>
+      <button class="tc-chip" type="button" data-key="peaceful" data-group="light">Peaceful</button>
+      <button class="tc-chip" type="button" data-key="warm" data-group="light">Warm</button>
+      <button class="tc-chip" type="button" data-key="kind" data-group="light">Kind</button>
+      <button class="tc-chip" type="button" data-key="energized" data-group="light">Energized</button>
+    </div>
+
+    <div class="tc-actions">
+      <button class="tc-btn tc-btn-primary" type="button" id="tcShowFeedback" disabled>
+        Show my reflection
+      </button>
+      <button class="tc-btn tc-btn-ghost" type="button" id="tcReset" disabled>
+        Reset
+      </button>
+    </div>
+
+    <div class="tc-feedback" id="tcFeedback" aria-live="polite" hidden>
+      <div class="tc-feedback-top">
+        <div class="tc-badge" id="tcBadge">Selected</div>
+        <div class="tc-selected">
+          You chose: <strong id="tcChosenLabel">—</strong>
+        </div>
+      </div>
+
+      <div class="tc-feedback-body">
+        <p class="tc-lead" id="tcLead">—</p>
+
+        <div class="tc-panels">
+          <div class="tc-panel">
+            <div class="tc-panel-title">A simple next step (today)</div>
+            <ul class="tc-list" id="tcSteps"></ul>
+          </div>
+
+          <div class="tc-panel">
+            <div class="tc-panel-title">A short phrase you can use</div>
+            <div class="tc-quote" id="tcPhrase">—</div>
+            <div class="tc-note">
+              Tip: Keep it calm, specific, and respectful—especially in diverse teams.
+            </div>
+          </div>
+        </div>
+
+        <div class="tc-divider"></div>
+
+        <div class="tc-micro">
+          <div class="tc-micro-title">Quick self-check</div>
+          <div class="tc-micro-q" id="tcMicroQuestion">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tc-footer">
+      <span class="tc-footnote">
+        This is a reflection tool (not a test). Use it to choose your next trust-building move.
+      </span>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root{
+    /* Atria-ish palette from your brand notes */
+    --atria-dark: #211499;
+    --atria-turq: #3FC2C2;
+    --atria-neon: #63F8EF;
+    --atria-light: #CDFFFC;
+    --atria-navy: #000C48;
+
+    --bg: #0b1030;
+    --card: #ffffff;
+    --text: #0f172a;
+    --muted: #475569;
+    --border: rgba(15, 23, 42, 0.12);
+
+    --chip: #f1f5f9;
+    --chipHover: #e2e8f0;
+    --shadow: 0 10px 30px rgba(2, 6, 23, 0.12);
+    --radius: 18px;
+  }
+
+  .trust-checkin{
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color: var(--text);
+    padding: 18px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .tc-card{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .tc-header{
+    padding: 22px 22px 12px;
+    background: linear-gradient(120deg, rgba(33,20,153,0.10), rgba(63,194,194,0.10));
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tc-eyebrow{
+    display: inline-flex;
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--atria-dark);
+    font-weight: 700;
+    opacity: .9;
+    margin-bottom: 10px;
+  }
+
+  .tc-title{
+    margin: 0 0 8px;
+    font-size: clamp(18px, 2.4vw, 26px);
+    line-height: 1.2;
+    color: var(--atria-navy);
+  }
+
+  .tc-subtitle{
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 70ch;
+  }
+
+  .tc-grid{
+    padding: 16px 22px 6px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  @media (min-width: 720px){
+    .tc-grid{
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .tc-chip{
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--chip);
+    border-radius: 999px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-weight: 650;
+    color: var(--atria-navy);
+    transition: transform .06s ease, background .2s ease, border-color .2s ease;
+    text-align: center;
+    user-select: none;
+  }
+  .tc-chip:hover{ background: var(--chipHover); }
+  .tc-chip:active{ transform: translateY(1px); }
+  .tc-chip:focus{ outline: 3px solid rgba(99,248,239,.55); outline-offset: 2px; }
+
+  .tc-chip.is-selected{
+    background: rgba(63,194,194,0.20);
+    border-color: rgba(63,194,194,0.65);
+    box-shadow: 0 0 0 3px rgba(63,194,194,0.18);
+  }
+
+  .tc-actions{
+    padding: 14px 22px 18px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tc-btn{
+    border-radius: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-weight: 750;
+    transition: transform .06s ease, opacity .2s ease;
+  }
+  .tc-btn:active{ transform: translateY(1px); }
+  .tc-btn[disabled]{ cursor: not-allowed; opacity: .55; }
+
+  .tc-btn-primary{
+    background: var(--atria-dark);
+    color: white;
+    border-color: rgba(33,20,153,.65);
+  }
+  .tc-btn-ghost{
+    background: #fff;
+    color: var(--atria-dark);
+  }
+
+  .tc-feedback{
+    padding: 18px 22px 22px;
+  }
+
+  .tc-feedback-top{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .tc-badge{
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .02em;
+    border: 1px solid var(--border);
+    color: var(--atria-navy);
+    background: rgba(205,255,252,0.65);
+  }
+
+  .tc-selected{
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .tc-lead{
+    margin: 10px 0 14px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--atria-navy);
+    font-weight: 650;
+  }
+
+  .tc-panels{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media (min-width: 760px){
+    .tc-panels{
+      grid-template-columns: 1.2fr 0.8fr;
+      align-items: start;
+    }
+  }
+
+  .tc-panel{
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    background: #fff;
+  }
+
+  .tc-panel-title{
+    font-weight: 900;
+    color: var(--atria-dark);
+    margin-bottom: 10px;
+  }
+
+  .tc-list{
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+    line-height: 1.5;
+    font-size: 14px;
+  }
+  .tc-list li{ margin: 6px 0; }
+
+  .tc-quote{
+    border-left: 4px solid rgba(63,194,194,0.75);
+    padding: 10px 12px;
+    background: rgba(63,194,194,0.12);
+    border-radius: 12px;
+    font-weight: 750;
+    color: var(--atria-navy);
+    line-height: 1.5;
+  }
+
+  .tc-note{
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+
+  .tc-divider{
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  .tc-micro-title{
+    font-weight: 900;
+    color: var(--atria-dark);
+    margin-bottom: 6px;
+  }
+  .tc-micro-q{
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .tc-footer{
+    padding: 14px 22px 18px;
+    background: linear-gradient(120deg, rgba(33,20,153,0.06), rgba(63,194,194,0.06));
+    border-top: 1px solid var(--border);
+  }
+  .tc-footnote{
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+</style>
+
+<script>
+  (function () {
+    const chips = Array.from(document.querySelectorAll(".tc-chip"));
+    const btnShow = document.getElementById("tcShowFeedback");
+    const btnReset = document.getElementById("tcReset");
+    const feedback = document.getElementById("tcFeedback");
+
+    const chosenLabel = document.getElementById("tcChosenLabel");
+    const lead = document.getElementById("tcLead");
+    const steps = document.getElementById("tcSteps");
+    const phrase = document.getElementById("tcPhrase");
+    const badge = document.getElementById("tcBadge");
+    const microQ = document.getElementById("tcMicroQuestion");
+
+    const copy = {
+      // Heavy feelings (solution-based, positive)
+      exclusion: {
+        badge: "Rebuild connection",
+        lead: "Feeling excluded can drain energy fast. The goal isn’t to blame—it’s to re-open a safe path back into the team.",
+        steps: [
+          "Choose one person you trust and request a 10-minute check-in.",
+          "Name one moment you felt left out (specific, calm, no accusations).",
+          "Ask what “being included” looks like in daily work (meetings, handovers, messages).",
+          "Agree on one small inclusion action for this week (e.g., loop-in on updates)."
+        ],
+        phrase: "“Can we align for 10 minutes? I want to stay in the loop—what’s the best way for me to be included in updates moving forward?”",
+        micro: "What’s one situation where inclusion would make your work easier this week?"
+      },
+      disappointment: {
+        badge: "Reset expectations",
+        lead: "Disappointment often means expectations and reality didn’t match. Trust grows when expectations become clear and shared.",
+        steps: [
+          "Write down what you expected (1 sentence).",
+          "Share it as an expectation—not a complaint.",
+          "Ask what the other person expected too.",
+          "Agree on one clear next expectation (who does what, by when)."
+        ],
+        phrase: "“I expected X, but what happened was Y. Can we align expectations so we’re clear going forward?”",
+        micro: "Which expectation needs to be clarified: timing, roles, or communication?"
+      },
+      unsure: {
+        badge: "Create clarity",
+        lead: "Being unsure is a signal: you need clearer information, priorities, or direction. Clarity is one of the fastest trust-builders.",
+        steps: [
+          "Ask one precise question (avoid long explanations).",
+          "Confirm priorities: ‘What matters most today?’",
+          "Repeat back what you heard in your own words.",
+          "Agree on the next checkpoint time (even 5 minutes)."
+        ],
+        phrase: "“Just to confirm: what is the top priority today, and what does ‘done’ look like?”",
+        micro: "What’s the one detail you need clarified to move confidently?"
+      },
+      frustration: {
+        badge: "Reduce friction",
+        lead: "Frustration usually means something is blocking progress. Turn the feeling into a process fix—small improvements create big relief.",
+        steps: [
+          "Name the blocker (task, tool, handover, unclear role).",
+          "Suggest one practical adjustment (not a full overhaul).",
+          "Ask for a quick trial: ‘Can we test this for 3 days?’",
+          "Review after the trial and keep what works."
+        ],
+        phrase: "“I’m hitting a blocker on X. Can we try Y for the next few days and see if it reduces delays?”",
+        micro: "What is the most common blocker you face: unclear priorities, handover gaps, or slow feedback?"
+      },
+      fearful: {
+        badge: "Restore psychological safety",
+        lead: "Fear can come from uncertainty, consequences, or past conflict. Safety grows when communication becomes calm, respectful, and predictable.",
+        steps: [
+          "Pick the safest channel (private, 1:1, calm timing).",
+          "Use facts first: what happened, not what you assume.",
+          "Ask for shared rules: how to raise issues without blame.",
+          "Identify one support person (mentor, senior, buddy) if needed."
+        ],
+        phrase: "“I want to raise something calmly and respectfully. Can we talk 1:1 so we can align without pressure?”",
+        micro: "What would make you feel safer: clearer rules, kinder tone, or more predictable follow-up?"
+      },
+      insecure: {
+        badge: "Build confidence through support",
+        lead: "Insecurity doesn’t mean you’re weak—it often means you care about doing well. Trust grows when support is normal, not embarrassing.",
+        steps: [
+          "Ask for a quick ‘check my approach’ before you finalize work.",
+          "Request feedback on one specific thing (not everything).",
+          "Agree on a simple standard/template for the task.",
+          "Track one improvement you can repeat next time."
+        ],
+        phrase: "“Can you quickly sanity-check my approach on X? I want to make sure I’m aligned with the standard.”",
+        micro: "What’s one area where a clear standard or example would boost your confidence?"
+      },
+      angry: {
+        badge: "Pause, then repair",
+        lead: "Anger often means a boundary was crossed or fairness felt violated. The best trust move is a calm reset: pause, then address it clearly.",
+        steps: [
+          "Pause before reacting (even 60 seconds helps).",
+          "Describe the impact: what it caused (delay, stress, confusion).",
+          "Ask for the change you need (specific behavior).",
+          "Close with a forward plan (how you’ll work together next time)."
+        ],
+        phrase: "“I want to address this calmly. When X happened, it caused Y. Next time, can we do Z so we avoid the same issue?”",
+        micro: "What boundary needs to be clearer: respect, communication, or fairness in workload?"
+      },
+
+      // Light feelings (strengthen & sustain)
+      clear: {
+        badge: "Protect clarity",
+        lead: "Clarity is a trust superpower. Your next step is to keep it consistent—especially during pressure and change.",
+        steps: [
+          "Keep using short, specific updates (what / who / when).",
+          "Confirm understanding during handovers.",
+          "Make priorities visible (daily focus list or quick stand-up).",
+          "Celebrate small wins to reinforce the habit."
+        ],
+        phrase: "“Quick alignment: priority is X, owner is Y, deadline is Z. Anything unclear before we start?”",
+        micro: "Where can you add one extra clarity checkpoint: handovers, meetings, or chat updates?"
+      },
+      approachable: {
+        badge: "Stay open & consistent",
+        lead: "Approachability builds trust because people feel safe to speak up. Keep it steady—especially with quieter teammates.",
+        steps: [
+          "Invite input: ask one person directly for their view.",
+          "Respond with curiosity before judgment.",
+          "Thank people for raising issues early.",
+          "Set predictable times for questions (so it’s easy to reach you)."
+        ],
+        phrase: "“If anything is unclear or risky, please raise it early—I'd rather we fix it together than later.”",
+        micro: "Who on your team might need a more direct invitation to speak up?"
+      },
+      accepting: {
+        badge: "Strengthen inclusion",
+        lead: "Acceptance helps teams work across differences. The next level is turning acceptance into daily inclusion and fairness.",
+        steps: [
+          "Check who gets airtime and who doesn’t.",
+          "Use neutral language when correcting mistakes.",
+          "Make decisions transparent (why we chose this).",
+          "Watch for small exclusions and fix them early."
+        ],
+        phrase: "“Different views help us. Let’s hear one alternative before we decide.”",
+        micro: "What’s one small inclusion habit you can start this week?"
+      },
+      peaceful: {
+        badge: "Keep calm under pressure",
+        lead: "A peaceful environment helps performance and reduces errors. Protect it with clear routines and respectful conflict handling.",
+        steps: [
+          "Keep a steady rhythm: brief updates, clear handovers.",
+          "Address issues early and privately.",
+          "Use facts and next steps (not blame).",
+          "Create a ‘reset’ moment after stressful tasks."
+        ],
+        phrase: "“Let’s reset for a moment. What’s the next best step from here?”",
+        micro: "When pressure rises, what helps your team stay calm: structure, tone, or planning?"
+      },
+      warm: {
+        badge: "Turn warmth into trust",
+        lead: "Warmth makes teamwork easier and faster. Pair it with clarity so kindness also leads to strong results.",
+        steps: [
+          "Keep recognition specific (what they did, impact).",
+          "Check in briefly after tough shifts/tasks.",
+          "Balance empathy with clear expectations.",
+          "Model respectful tone—even when correcting."
+        ],
+        phrase: "“Thanks for that—your support helped us move faster. For next time, let’s align on X so it’s even smoother.”",
+        micro: "How can you keep warmth while still being direct about expectations?"
+      },
+      kind: {
+        badge: "Lead with respect",
+        lead: "Kindness builds loyalty and psychological safety. The next step is using kindness consistently—even in correction and conflict.",
+        steps: [
+          "Correct privately when possible.",
+          "Focus on behavior, not personality.",
+          "Offer support: ‘What do you need to succeed?’",
+          "Close conversations with a clear, fair next step."
+        ],
+        phrase: "“I’m saying this to support you: here’s what we need, and I’m here to help you meet it.”",
+        micro: "Where do you need more kindness in your work: feedback, workload, or communication tone?"
+      },
+      energized: {
+        badge: "Channel energy wisely",
+        lead: "Energy is powerful—it can lift the whole team. Use it with focus so it becomes momentum, not overload.",
+        steps: [
+          "Pick 1–2 priorities (don’t spread energy too thin).",
+          "Invite others to join small wins (quick tasks).",
+          "Watch for fatigue in the team and pace accordingly.",
+          "End the day with a short ‘what worked’ review."
+        ],
+        phrase: "“I’m excited to move this forward—what’s the one priority we should finish first?”",
+        micro: "How can you share energy without increasing pressure for others?"
+      }
+    };
+
+    let selectedKey = null;
+
+    function clearSelection() {
+      chips.forEach(c => c.classList.remove("is-selected"));
+      selectedKey = null;
+      btnShow.disabled = true;
+      btnReset.disabled = true;
+      feedback.hidden = true;
+      chosenLabel.textContent = "—";
+    }
+
+    function setSelection(btn) {
+      chips.forEach(c => c.classList.remove("is-selected"));
+      btn.classList.add("is-selected");
+      selectedKey = btn.getAttribute("data-key");
+      btnShow.disabled = false;
+      btnReset.disabled = false;
+      feedback.hidden = true;
+    }
+
+    function renderFeedback(key) {
+      const item = copy[key];
+      if (!item) return;
+
+      chosenLabel.textContent = prettyLabel(key);
+      lead.textContent = item.lead;
+
+      badge.textContent = item.badge;
+
+      steps.innerHTML = "";
+      item.steps.forEach(s => {
+        const li = document.createElement("li");
+        li.textContent = s;
+        steps.appendChild(li);
+      });
+
+      phrase.textContent = item.phrase;
+      microQ.textContent = item.micro;
+
+      feedback.hidden = false;
+      feedback.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function prettyLabel(key) {
+      return key.charAt(0).toUpperCase() + key.slice(1);
+    }
+
+    chips.forEach(btn => {
+      btn.addEventListener("click", () => setSelection(btn));
+      btn.addEventListener("keydown", (e) => {
+        // Optional: Enter/Space selects for accessibility
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setSelection(btn);
+        }
+      });
+    });
+
+    btnShow.addEventListener("click", () => {
+      if (!selectedKey) return;
+      renderFeedback(selectedKey);
+    });
+
+    btnReset.addEventListener("click", clearSelection);
+
+    // Start clean
+    clearSelection();
+  })();
+</script>
