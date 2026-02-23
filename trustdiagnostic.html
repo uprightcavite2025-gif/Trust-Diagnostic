@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trust Snapshot Diagnostic</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #111a33;
+      --muted: #a9b3d1;
+      --text: #eef2ff;
+      --accent: #3FC2C2;
+      --accent2: #63F8EF;
+      --danger: #ff6b6b;
+      --warn: #ffcc66;
+      --ok: #7ee787;
+      --line: rgba(255,255,255,.12);
+    }
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(63,194,194,.18), transparent 60%),
+                  radial-gradient(900px 500px at 100% 10%, rgba(99,248,239,.14), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+    .wrap{max-width: 980px; margin: 0 auto; padding: 20px 14px 42px;}
+    .hero{
+      padding: 18px 16px; border: 1px solid var(--line); border-radius: 18px;
+      background: linear-gradient(180deg, rgba(17,26,51,.92), rgba(17,26,51,.72));
+    }
+    h1{margin:0 0 8px; font-size: 22px;}
+    .sub{color: var(--muted); margin: 0; line-height: 1.35;}
+    .note{margin-top: 10px; font-size: 13px; color: var(--muted);}
+    .pill{
+      display:inline-block; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line);
+      color: var(--muted); font-size: 12px; margin-top: 10px;
+    }
+
+    .card{
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(17,26,51,.72);
+      overflow: hidden;
+    }
+    .cardHeader{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .cardHeader h2{margin:0; font-size: 16px;}
+    .cardHeader .small{color: var(--muted); font-size: 12px;}
+    .section{padding: 12px 14px;}
+    .q{
+      padding: 12px 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      background: rgba(0,0,0,.10);
+    }
+    .qTitle{margin:0 0 10px; font-size: 14px; line-height: 1.35;}
+    .scale{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .opt{
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 12px;
+      padding: 10px 8px;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .06s ease, border-color .15s ease, background .15s ease;
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 44px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    input[type="radio"]{display:none;}
+    input[type="radio"]:checked + .opt{
+      border-color: rgba(63,194,194,.95);
+      background: rgba(63,194,194,.18);
+      color: var(--text);
+    }
+    .opt:active{transform: scale(.99);}
+
+    .actions{
+      display:flex; gap: 10px; flex-wrap: wrap;
+      padding: 12px 14px; border-top: 1px solid var(--line);
+      background: rgba(0,0,0,.14);
+    }
+    button{
+      appearance:none; border: 0; border-radius: 14px;
+      padding: 10px 14px; cursor:pointer; font-weight: 650;
+      background: linear-gradient(90deg, rgba(63,194,194,.95), rgba(99,248,239,.92));
+      color: #001018;
+    }
+    button.secondary{
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.18);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .err{
+      color: var(--danger);
+      font-size: 13px;
+      margin: 6px 0 0;
+    }
+
+    .results{
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(17,26,51,.82);
+      padding: 14px;
+      display:none;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 820px){
+      .grid{grid-template-columns: 1.2fr .8fr;}
+      .subgrid{display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;}
+    }
+    .kpi{
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(0,0,0,.12);
+    }
+    .kpi h3{margin:0 0 6px; font-size: 14px;}
+    .kpi .val{font-size: 22px; font-weight: 800;}
+    .kpi .meta{color: var(--muted); font-size: 12px; margin-top: 2px;}
+    .tag{
+      display:inline-block; font-size: 12px; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16); margin-top: 8px; color: var(--muted);
+    }
+    .tag.ok{border-color: rgba(126,231,135,.6); color: rgba(126,231,135,.95);}
+    .tag.warn{border-color: rgba(255,204,102,.7); color: rgba(255,204,102,.95);}
+    .tag.risk{border-color: rgba(255,122,89,.65); color: rgba(255,160,130,.98);}
+    .tag.bad{border-color: rgba(255,107,107,.7); color: rgba(255,107,107,.98);}
+
+    .fb{
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(0,0,0,.10);
+    }
+    .fb h3{margin:0 0 6px; font-size: 14px;}
+    .fb p{margin:0; color: var(--muted); line-height:1.45;}
+    .divider{height:1px; background: var(--line); margin: 10px 0;}
+    .small{font-size: 12px; color: var(--muted);}
+    .focus{
+      border-left: 4px solid var(--accent);
+      padding-left: 10px;
+    }
+    .printRow{display:flex; gap: 10px; flex-wrap:wrap; margin-top: 10px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>Trust Snapshot (Diagnostic)</h1>
+      <p class="sub">
+        This quick diagnostic measures trust behaviors in three areas:
+        <b>Context</b> (predictability), <b>Mutual Relationship</b> (goodwill), and <b>Personality</b> (willingness to be vulnerable / psychological safety).
+      </p>
+      <div class="pill">18 items • 5-point scale • Instant feedback</div>
+      <p class="note">
+        Answer honestly based on your <b>consistent behavior under pressure</b>, not your intention.
+      </p>
+    </div>
+
+    <div class="card" id="formCard">
+      <div class="cardHeader">
+        <h2>Questions</h2>
+        <div class="small">1 = Strongly Disagree … 5 = Strongly Agree</div>
+      </div>
+      <div class="section" id="questions"></div>
+      <div class="actions">
+        <button id="btnCalc">Calculate Results</button>
+        <button class="secondary" id="btnReset" type="button">Reset</button>
+        <div id="err" class="err" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="results" id="results">
+      <div class="grid">
+        <div>
+          <div class="subgrid" id="kpis"></div>
+          <div class="divider"></div>
+          <div class="fb focus" id="primaryFocus"></div>
+          <div class="divider"></div>
+          <div class="fb" id="overallFeedback"></div>
+        </div>
+        <div>
+          <div class="fb" id="contextFeedback"></div>
+          <div class="divider"></div>
+          <div class="fb" id="relationshipFeedback"></div>
+          <div class="divider"></div>
+          <div class="fb" id="vulnerabilityFeedback"></div>
+          <div class="divider"></div>
+          <div class="fb" id="interventionHint"></div>
+          <div class="printRow">
+            <button class="secondary" id="btnPrint" type="button">Print / Save as PDF</button>
+          </div>
+          <div class="small" style="margin-top:8px;">
+            Tip: If you embed this in aNewSpring, “Print / Save as PDF” lets learners keep a copy of their results.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/**
+ * Trust Snapshot Diagnostic
+ * - 18 items
+ * - 3 clusters: context / relationship / vulnerability
+ * - 5-point Likert
+ * - reverse-coded items handled via reverse:true
+ */
+
+const SCALE = [
+  { label: "Strongly Disagree", value: 1 },
+  { label: "Disagree", value: 2 },
+  { label: "Neutral", value: 3 },
+  { label: "Agree", value: 4 },
+  { label: "Strongly Agree", value: 5 },
+];
+
+const items = [
+  // CONTEXT (6) — item 6 is reverse-coded
+  { id: "q1",  cluster: "context", text: "My team rarely feels surprised by my decisions." },
+  { id: "q2",  cluster: "context", text: "I clearly explain expectations before evaluating performance." },
+  { id: "q3",  cluster: "context", text: "I apply standards consistently, even under pressure." },
+  { id: "q4",  cluster: "context", text: "When uncertainty appears, I address it directly." },
+  { id: "q5",  cluster: "context", text: "Delegation includes clear authority and accountability." },
+  { id: "q6",  cluster: "context", text: "Team members often seem unsure about priorities.", reverse: true },
+
+  // RELATIONSHIP (6) — item 12 is reverse-coded
+  { id: "q7",  cluster: "relationship", text: "I intentionally check the emotional climate of my team." },
+  { id: "q8",  cluster: "relationship", text: "I address small tensions before they escalate." },
+  { id: "q9",  cluster: "relationship", text: "Team members approach me comfortably with concerns." },
+  { id: "q10", cluster: "relationship", text: "I actively listen without interrupting prematurely." },
+  { id: "q11", cluster: "relationship", text: "I assume positive intent before judging behavior." },
+  { id: "q12", cluster: "relationship", text: "Some team members appear guarded around me.", reverse: true },
+
+  // VULNERABILITY (6) — item 18 is reverse-coded
+  { id: "q13", cluster: "vulnerability", text: "I openly admit when I don’t have all the answers." },
+  { id: "q14", cluster: "vulnerability", text: "Team members challenge ideas without fear of negative consequences." },
+  { id: "q15", cluster: "vulnerability", text: "When mistakes occur, the focus stays on learning rather than blame." },
+  { id: "q16", cluster: "vulnerability", text: "I invite dissenting opinions during discussions." },
+  { id: "q17", cluster: "vulnerability", text: "I handle difficult conversations calmly and respectfully." },
+  { id: "q18", cluster: "vulnerability", text: "People tend to stay silent when I react strongly.", reverse: true },
+];
+
+const clusterNames = {
+  context: "Context Trust",
+  relationship: "Mutual Relationship Trust",
+  vulnerability: "Personality (Vulnerability) Trust",
+};
+
+const thresholds = [
+  { min: 85, tag: "Strong", css: "ok" },
+  { min: 70, tag: "Stable but Fragile", css: "warn" },
+  { min: 55, tag: "At Risk", css: "risk" },
+  { min: 0,  tag: "Active Erosion", css: "bad" },
+];
+
+function band(pct){
+  return thresholds.find(t => pct >= t.min);
+}
+
+function pct(numerator, denom){
+  return Math.round((numerator / denom) * 100);
+}
+
+function reverseScore(value){ // 1..5 -> 5..1
+  return 6 - value;
+}
+
+function feedbackFor(clusterKey, pctValue){
+  const b = band(pctValue);
+  // Exact feedback screens per score range (short, direct)
+  const fb = {
+    context: {
+      Strong: {
+        title: "You Lead with Predictability",
+        body: "Your team likely experiences clarity and stability. Expectations are visible and standards are consistent. Next focus: maintain this under pressure."
+      },
+      "Stable but Fragile": {
+        title: "Clear — But Not Always Consistent",
+        body: "Your team generally understands expectations, but under stress clarity may weaken. This module sharpens your consistency during tension."
+      },
+      "At Risk": {
+        title: "Uncertainty May Be Growing",
+        body: "Ambiguity may exist in priorities, delegation, or decision transparency. When predictability drops, anxiety rises. You’ll practice clarity resets and stable standards."
+      },
+      "Active Erosion": {
+        title: "Structural Trust Is At Risk",
+        body: "Your team may feel unsure about direction or surprised by decisions. Without predictability, relational trust cannot stabilize. This course will prioritize restoring structural clarity first."
+      }
+    },
+    relationship: {
+      Strong: {
+        title: "You Are Experienced as Supportive",
+        body: "Care behaviors are visible. Goodwill is likely present. Next focus: balance warmth with high standards and early tension repair."
+      },
+      "Stable but Fragile": {
+        title: "Professional — But Possibly Distant",
+        body: "Respect may exist, but warmth may fluctuate. Small signals matter. You’ll strengthen visible care behaviors and enquiry-based leadership."
+      },
+      "At Risk": {
+        title: "Guarded Energy May Exist",
+        body: "Some team members may hesitate before speaking openly. Goodwill requires intentional behaviors. You’ll practice listening discipline, assumption-checking, and early tension handling."
+      },
+      "Active Erosion": {
+        title: "Goodwill May Be Weakening",
+        body: "Your team may not consistently feel you are ‘for them.’ Trust cannot grow without relational safety. This module focuses on rebuilding connection through deliberate, observable care behaviors."
+      }
+    },
+    vulnerability: {
+      Strong: {
+        title: "Psychological Safety Is Likely Strong",
+        body: "Your team likely challenges ideas openly and learns from mistakes. Next focus: sustain calm and curiosity under pressure."
+      },
+      "Stable but Fragile": {
+        title: "Openness Exists — But May Fluctuate",
+        body: "Safety may depend on the situation. Under stress, reactions matter most. You’ll refine difficult-conversation discipline and non-blame learning responses."
+      },
+      "At Risk": {
+        title: "Silence May Be Present",
+        body: "Team members may avoid disagreement or withhold concerns. Psychological safety requires leader modeling first. You’ll practice inviting dissent and responding with learning focus."
+      },
+      "Active Erosion": {
+        title: "Self-Protection May Be Occurring",
+        body: "People may withhold concerns around you. Without vulnerability trust, risks hide and innovation drops. This module strongly targets speak-up culture and non-blame responses."
+      }
+    }
+  };
+
+  const entry = fb[clusterKey][b.tag];
+  return { ...entry, band: b };
+}
+
+function overallFeedback(scores){
+  const avgPct = Math.round((scores.context.pct + scores.relationship.pct + scores.vulnerability.pct) / 3);
+  const b = band(avgPct);
+
+  let title = "";
+  let body = "";
+  if (b.tag === "Strong") {
+    title = "Strong Trust Foundation";
+    body = "Your trust indicators are strong across the model. The Deep Dive will focus on advanced judgment: sequencing interventions, maintaining trust under pressure, and preventing blind spots.";
+  } else if (b.tag === "Stable but Fragile") {
+    title = "Stable, But Pressure Is the Test";
+    body = "Trust is present, but may not hold consistently under stress. The Deep Dive will sharpen predictable leadership, care behaviors, and psychological safety in real situations.";
+  } else if (b.tag === "At Risk") {
+    title = "Trust Is Vulnerable Right Now";
+    body = "Some trust behaviors may be weakening. You’ll focus on practical fixes: clearer expectations, visible goodwill, and safer speak-up responses—then apply one real intervention.";
+  } else {
+    title = "Trust Repair Needed";
+    body = "Your results suggest active trust erosion in at least one area. This Deep Dive prioritizes repair behaviors and structured interventions before moving into advanced scenarios.";
+  }
+
+  return { title, body, avgPct, band: b };
+}
+
+function recommendInterventions(primary){
+  // Aligns to your allowed real intervention options
+  const map = {
+    context: [
+      "Rumor confrontation workshop",
+      "Promotion conversation reset",
+      "Working environment analysis"
+    ],
+    relationship: [
+      "Team atmosphere check",
+      "Fireside chat",
+      "Working environment analysis"
+    ],
+    vulnerability: [
+      "Fireside chat",
+      "Promotion conversation reset",
+      "Team atmosphere check"
+    ]
+  };
+  return map[primary] || [];
+}
+
+function render(){
+  const qWrap = document.getElementById("questions");
+  qWrap.innerHTML = "";
+
+  const clusters = [
+    { key: "context", title: "Module: Context (Predictability)" },
+    { key: "relationship", title: "Module: Mutual Relationship (Goodwill)" },
+    { key: "vulnerability", title: "Module: Personality (Vulnerability / Psychological Safety)" },
+  ];
+
+  clusters.forEach(c => {
+    const block = document.createElement("div");
+    block.className = "q";
+    block.innerHTML = `<div class="qTitle"><b>${c.title}</b></div>
+      <div class="small">Select one option per statement.</div>`;
+    qWrap.appendChild(block);
+
+    items.filter(i => i.cluster === c.key).forEach((it, idx) => {
+      const q = document.createElement("div");
+      q.className = "q";
+      const num = items.findIndex(x => x.id === it.id) + 1;
+      q.innerHTML = `
+        <p class="qTitle">${num}. ${it.text} ${it.reverse ? '<span class="small">(reverse-scored)</span>' : ''}</p>
+        <div class="scale">
+          ${SCALE.map(s => `
+            <label>
+              <input type="radio" name="${it.id}" value="${s.value}">
+              <div class="opt">${s.label}</div>
+            </label>
+          `).join("")}
+        </div>
+      `;
+      qWrap.appendChild(q);
+    });
+  });
+}
+
+function getAnswers(){
+  const answers = {};
+  for (const it of items){
+    const el = document.querySelector(`input[name="${it.id}"]:checked`);
+    if (!el) return { ok: false, missing: it.id };
+    answers[it.id] = Number(el.value);
+  }
+  return { ok: true, answers };
+}
+
+function computeScores(answers){
+  const clusters = ["context", "relationship", "vulnerability"];
+  const maxPerCluster = 6 * 5; // 30
+  const scores = {};
+
+  clusters.forEach(c => {
+    let sum = 0;
+    items.filter(i => i.cluster === c).forEach(it => {
+      const raw = answers[it.id];
+      const val = it.reverse ? reverseScore(raw) : raw;
+      sum += val;
+    });
+    const p = pct(sum, maxPerCluster);
+    scores[c] = { raw: sum, pct: p, max: maxPerCluster };
+  });
+
+  return scores;
+}
+
+function primaryFocus(scores){
+  const entries = Object.entries(scores).map(([k,v]) => ({ key:k, pct:v.pct }));
+  entries.sort((a,b) => a.pct - b.pct);
+  const low = entries[0];
+
+  // tie handling within 5%
+  const second = entries[1];
+  const dual = Math.abs(low.pct - second.pct) <= 5 ? [low.key, second.key] : [low.key];
+
+  return { primary: low.key, dual };
+}
+
+function renderResults(scores){
+  const res = document.getElementById("results");
+  res.style.display = "block";
+
+  // KPIs
+  const kpis = document.getElementById("kpis");
+  kpis.innerHTML = "";
+  ["context","relationship","vulnerability"].forEach(k => {
+    const b = band(scores[k].pct);
+    const div = document.createElement("div");
+    div.className = "kpi";
+    div.innerHTML = `
+      <h3>${clusterNames[k]}</h3>
+      <div class="val">${scores[k].pct}%</div>
+      <div class="meta">${scores[k].raw} / ${scores[k].max} points</div>
+      <div class="tag ${b.css}">${b.tag}</div>
+    `;
+    kpis.appendChild(div);
+  });
+
+  // Primary focus
+  const pf = primaryFocus(scores);
+  const pfDiv = document.getElementById("primaryFocus");
+  const focusLabels = pf.dual.map(k => clusterNames[k]).join(" + ");
+  pfDiv.innerHTML = `
+    <h3>Primary Focus</h3>
+    <p>
+      Based on your results, your biggest leverage is:
+      <b>${focusLabels}</b>.
+      This is where small behavior changes can create the fastest trust gains.
+    </p>
+    <p class="small" style="margin-top:8px;">
+      Reminder: Trust is built in micro-moments—especially under pressure.
+    </p>
+  `;
+
+  // Overall feedback
+  const overall = overallFeedback(scores);
+  const overallDiv = document.getElementById("overallFeedback");
+  overallDiv.innerHTML = `
+    <h3>Overall Summary: ${overall.title}</h3>
+    <p>${overall.body}</p>
+    <div class="tag ${overall.band.css}" style="margin-top:10px;">Overall: ${overall.avgPct}% • ${overall.band.tag}</div>
+  `;
+
+  // Cluster feedback boxes
+  const ctx = feedbackFor("context", scores.context.pct);
+  const rel = feedbackFor("relationship", scores.relationship.pct);
+  const vul = feedbackFor("vulnerability", scores.vulnerability.pct);
+
+  document.getElementById("contextFeedback").innerHTML = `
+    <h3>${clusterNames.context}: ${ctx.title}</h3>
+    <p>${ctx.body}</p>
+    <div class="tag ${ctx.band.css}" style="margin-top:10px;">${scores.context.pct}% • ${ctx.band.tag}</div>
+  `;
+
+  document.getElementById("relationshipFeedback").innerHTML = `
+    <h3>${clusterNames.relationship}: ${rel.title}</h3>
+    <p>${rel.body}</p>
+    <div class="tag ${rel.band.css}" style="margin-top:10px;">${scores.relationship.pct}% • ${rel.band.tag}</div>
+  `;
+
+  document.getElementById("vulnerabilityFeedback").innerHTML = `
+    <h3>${clusterNames.vulnerability}: ${vul.title}</h3>
+    <p>${vul.body}</p>
+    <div class="tag ${vul.band.css}" style="margin-top:10px;">${scores.vulnerability.pct}% • ${vul.band.tag}</div>
+  `;
+
+  // Intervention hint
+  const hint = document.getElementById("interventionHint");
+  const suggested = recommendInterventions(pf.primary);
+  hint.innerHTML = `
+    <h3>Suggested “Bring Trust to Life” Intervention Options</h3>
+    <p class="small">Pick ONE real intervention later in the course. Based on your results, these options typically fit best:</p>
+    <ul class="small" style="margin:8px 0 0 18px; color: var(--muted);">
+      ${suggested.map(s => `<li>${s}</li>`).join("")}
+    </ul>
+    <div class="divider"></div>
+    <p class="small"><b>Submission requirements:</b> Why this intervention? Which trust driver did you target? What changed?</p>
+  `;
+
+  // Scroll to results
+  res.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  render();
+
+  document.getElementById("btnCalc").addEventListener("click", () => {
+    const err = document.getElementById("err");
+    err.textContent = "";
+
+    const got = getAnswers();
+    if (!got.ok){
+      err.textContent = "Please answer all questions before calculating results.";
+      // bring missing question into view
+      const missingEl = document.querySelector(`[name="${got.missing}"]`);
+      if (missingEl) missingEl.closest(".q")?.scrollIntoView({behavior:"smooth", block:"center"});
+      return;
+    }
+
+    const scores = computeScores(got.answers);
+    renderResults(scores);
+  });
+
+  document.getElementById("btnReset").addEventListener("click", () => {
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+    document.getElementById("err").textContent = "";
+    document.getElementById("results").style.display = "none";
+    document.getElementById("formCard").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+
+  document.getElementById("btnPrint").addEventListener("click", () => window.print());
+});
+</script>
+</body>
+</html>
