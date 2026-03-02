@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Trust Snapshot (Diagnostic)</title>
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#111a33;
+      --card2: rgba(17,26,51,.72);
+      --muted:#a9b3d1;
+      --text:#eef2ff;
+      --accent:#3FC2C2;
+      --accent2:#63F8EF;
+      --line: rgba(255,255,255,.12);
+
+      /* band colors */
+      --strong:#7ee787;
+      --fragile:#ffcc66;
+      --risk:#ff9f66;
+      --erosion:#ff6b6b;
+    }
+
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(63,194,194,.18), transparent 60%),
+        radial-gradient(900px 500px at 100% 10%, rgba(99,248,239,.14), transparent 55%),
+        var(--bg);
+      color:var(--text);
+    }
+
+    .wrap{max-width:980px; margin:0 auto; padding:18px 14px 40px;}
+
+    /* HEADER boxes */
+    .heroGrid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+    @media (min-width: 900px){
+      .heroGrid{grid-template-columns: 1.05fr .95fr;}
+    }
+
+    .heroBox{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      background: linear-gradient(180deg, rgba(17,26,51,.92), rgba(17,26,51,.72));
+    }
+
+    h1{margin:0 0 8px; font-size:20px;}
+    .sub{margin:0; color:var(--muted); line-height:1.4; font-size:13px;}
+    .pill{
+      display:inline-block;
+      margin-top:10px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .hl{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+      font-weight:800;
+      letter-spacing:.2px;
+      margin-right:8px;
+    }
+    .hl.before{border-color: rgba(63,194,194,.5); color: rgba(99,248,239,.95);}
+    .hl.important{border-color: rgba(255,204,102,.55); color: rgba(255,204,102,.98);}
+
+    /* MAIN diagnostic card */
+    .card{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background: rgba(17,26,51,.72);
+      overflow:hidden;
+    }
+    .cardHeader{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      padding:12px 14px;
+      border-bottom: 1px solid var(--line);
+      gap: 12px;
+    }
+    .cardHeader h2{margin:0; font-size:16px;}
+    .small{color:var(--muted); font-size:12px; line-height:1.35;}
+    .section{padding:12px 14px;}
+
+    /* page switch (3 pages) */
+    .pages{display:none;}
+    .pages.active{display:block;}
+
+    /* question block */
+    .q{
+      padding:12px;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      margin-bottom:10px;
+      background: rgba(0,0,0,.10);
+    }
+    .qTitle{margin:0 0 10px; font-size:13px; line-height:1.35;}
+
+    /* aNewSpring-friendly: questions area scrolls inside card */
+    .qArea{
+      max-height: 440px;
+      overflow:auto;
+      padding-right:6px;
+    }
+    .qArea::-webkit-scrollbar{width:8px;}
+    .qArea::-webkit-scrollbar-thumb{background: rgba(255,255,255,.14); border-radius:999px;}
+
+    /* scale */
+    .scale{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    @media (max-width: 520px){
+      .scale{grid-template-columns: repeat(2, minmax(0,1fr));}
+    }
+
+    .opt{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:12px;
+      padding:10px 8px;
+      text-align:center;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+      font-size:12px;
+      color:var(--muted);
+      min-height:44px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.08);
+    }
+    .opt:hover{
+      transform: translateY(-1px);
+      border-color: rgba(63,194,194,.55);
+      box-shadow: 0 8px 18px rgba(0,0,0,.22);
+    }
+    input[type="radio"]{display:none;}
+    input[type="radio"]:checked + .opt{
+      border-color: rgba(63,194,194,.95);
+      background: rgba(63,194,194,.18);
+      color: var(--text);
+      box-shadow: 0 10px 22px rgba(63,194,194,.14);
+      transform: translateY(-1px);
+    }
+
+    /* actions */
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:12px 14px;
+      border-top:1px solid var(--line);
+      background: rgba(0,0,0,.14);
+      align-items:center;
+      justify-content:space-between;
+    }
+    .actionsLeft{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    button{
+      appearance:none; border:0; border-radius:14px;
+      padding:10px 14px; cursor:pointer; font-weight:750;
+      background: linear-gradient(90deg, rgba(63,194,194,.95), rgba(99,248,239,.92));
+      color:#001018;
+    }
+    button.secondary{
+      background: transparent;
+      border:1px solid rgba(255,255,255,.18);
+      color:var(--text);
+      font-weight:650;
+    }
+    button:disabled{opacity:.55; cursor:not-allowed;}
+    .err{color: var(--erosion); font-size:13px; margin: 6px 0 0;}
+
+    /* RESULTS (dashboard-like) */
+    .results{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background: rgba(17,26,51,.82);
+      padding:14px;
+      display:none;
+    }
+
+    .resultsHead{
+      display:flex; align-items:flex-start; justify-content:space-between; gap: 12px;
+      margin-bottom:10px;
+    }
+    .resultsHead h2{margin:0; font-size:16px;}
+    .resultsHead .small{max-width: 520px;}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 920px){
+      .grid{grid-template-columns: 1.15fr .85fr;}
+    }
+
+    .kpiRow{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    @media (min-width: 820px){
+      .kpiRow{grid-template-columns: repeat(3, 1fr);}
+    }
+    .kpi{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.12);
+    }
+    .kpiTitle{margin:0; font-size:13px; font-weight:800;}
+    .kpiVal{margin:6px 0 0; font-size:24px; font-weight:950;}
+    .kpiMeta{margin-top:2px; color:var(--muted); font-size:12px;}
+
+    .tag{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px;
+      padding:5px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      margin-top:10px;
+      font-weight:850;
+      white-space:nowrap;
+      background: rgba(0,0,0,.10);
+    }
+    .tag.strong{border-color: rgba(126,231,135,.7); color: rgba(126,231,135,.98);}
+    .tag.fragile{border-color: rgba(255,204,102,.8); color: rgba(255,204,102,.98);}
+    .tag.risk{border-color: rgba(255,159,102,.75); color: rgba(255,159,102,.98);}
+    .tag.erosion{border-color: rgba(255,107,107,.8); color: rgba(255,107,107,.98);}
+
+    .box{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.10);
+    }
+    .box h3{margin:0 0 8px; font-size:14px;}
+    .box p{margin:0; color:var(--muted); line-height:1.45;}
+    .focusBox{
+      border-left: 4px solid var(--accent);
+      padding-left: 12px;
+      background: rgba(0,0,0,.12);
+    }
+
+    .driverCard{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:14px;
+      background: rgba(0,0,0,.10);
+      overflow:hidden;
+      margin-bottom:12px;
+    }
+    .driverBody{padding:12px;}
+    .driverBody h3{margin:0 0 8px; font-size:14px;}
+    .driverBody p{margin:0; color:var(--muted); line-height:1.45;}
+    .driverFooter{
+      padding:10px 12px;
+      border-top:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.14);
+    }
+
+    .btnRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+    .previewWrap{margin-top:10px; display:none;}
+    .previewTitle{margin:0 0 8px; font-size:12px; color:var(--muted); font-weight:750;}
+    .previewImg{
+      width:100%;
+      height:auto;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.10);
+      display:block;
+    }
+
+    @media print{
+      body{background:#fff;color:#000;}
+      .heroGrid, #formCard{display:none !important;}
+      #results{display:block !important; border:none; background:#fff;}
+      .kpi,.box,.driverCard{border:1px solid #ddd;background:#fff;}
+      .driverFooter{border-top:1px solid #ddd;background:#fff;}
+      .tag{color:#000;}
+      button{display:none !important;}
+      .previewWrap{display:none !important;}
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <!-- HEADER: separate boxes -->
+  <div class="heroGrid">
+    <div class="heroBox">
+      <h1>Trust Snapshot (Diagnostic)</h1>
+      <p class="sub"><span class="hl before">Before you start</span>This is a self-calibration tool.</p>
+      <p class="sub">Answer based on your typical behavior over the past months — especially under pressure.</p>
+      <div class="pill">18 items • 5-point scale • 3 pages • Instant results</div>
+    </div>
+
+    <div class="heroBox">
+      <p class="sub">
+        <span class="hl important">Important</span>
+        This is not a clinical test, medical test, or psychology assessment. It is not a personality test and not a performance evaluation.
+      </p>
+      <p class="sub" style="margin-top:10px;">
+        This is a self-reflection diagnostic based on a simple model of “the feeling of trust.”
+      </p>
+    </div>
+  </div>
+
+  <!-- FORM / PAGES -->
+  <div class="card" id="formCard">
+    <div class="cardHeader">
+      <div>
+        <h2 id="pageTitle">Context (predictability)</h2>
+        <div class="small" id="pageDesc">
+          Trust grows when people know what to expect from you. This part is about clarity, consistency, and follow-through.
+        </div>
+      </div>
+      <div class="small" id="scaleLegend">Almost Never • Rarely • Sometimes • Often • Almost Always</div>
+    </div>
+
+    <div class="section">
+      <!-- PAGES -->
+      <div class="pages active" id="p1">
+        <div class="qArea" id="qContext"></div>
+      </div>
+
+      <div class="pages" id="p2">
+        <div class="qArea" id="qRelationship"></div>
+      </div>
+
+      <div class="pages" id="p3">
+        <div class="qArea" id="qVulnerability"></div>
+      </div>
+
+      <div id="err" class="err" aria-live="polite"></div>
+    </div>
+
+    <div class="actions">
+      <div class="actionsLeft">
+        <button class="secondary" id="btnBack" type="button">Back</button>
+        <button class="secondary" id="btnReset" type="button">Reset</button>
+      </div>
+      <div class="actionsLeft">
+        <button id="btnNext" type="button">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="resultsHead">
+      <div>
+        <h2>Trust Snapshot — Results</h2>
+        <div class="small">Scan the top scores first, then read the driver cards. The preview updates automatically.</div>
+      </div>
+    </div>
+
+    <div class="kpiRow" id="kpiRow"></div>
+
+    <div class="grid">
+      <!-- LEFT column -->
+      <div>
+        <div class="box focusBox" id="primaryFocus"></div>
+        <div style="height:12px;"></div>
+        <div class="box" id="overallFeedback"></div>
+      </div>
+
+      <!-- RIGHT column -->
+      <div>
+        <div class="driverCard" id="contextCard"></div>
+        <div class="driverCard" id="relationshipCard"></div>
+        <div class="driverCard" id="vulnerabilityCard"></div>
+
+        <div class="box" id="interventionHint"></div>
+
+        <div class="btnRow">
+          <button class="secondary" id="btnPrint" type="button">Print / Save as PDF</button>
+          <button class="secondary" id="btnPng" type="button" disabled>Download Results (PNG)</button>
+        </div>
+
+        <div class="previewWrap" id="previewWrap">
+          <p class="previewTitle">Preview (if download is blocked on mobile, long-press the image to Save/Share)</p>
+          <img class="previewImg" id="previewImg" alt="Results preview image" />
+        </div>
+
+        <canvas id="resultsCanvas" width="1240" height="1754" style="display:none;" aria-hidden="true"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* -----------------------------
+  CONFIG
+------------------------------ */
+const SCALE_LABELS = ["Almost Never","Rarely","Sometimes","Often","Almost Always"];
+const VALS_NORMAL = [1,2,3,4,5];
+const VALS_REVERSED = [5,4,3,2,1]; // discreet reverse coding
+
+const BANK = {
+  context: {
+    title: "Context (predictability)",
+    desc: "Trust grows when people know what to expect from you. This part is about clarity, consistency, and follow-through.",
+    items: [
+      "I explain the reasoning behind important decisions.",
+      "I explain expectations before evaluating performance.",
+      "I apply standards consistently, even under pressure.",
+      "When plans change, I communicate the change quickly and clearly.",
+      "When I delegate, I clarify both responsibility and decision authority.",
+      "I move forward without clearly restating priorities."
+    ]
+  },
+  relationship: {
+    title: "Mutual Relationship (goodwill)",
+    desc: "Trust grows when people feel you are for them. This part is about visible care, fairness, and emotional awareness.",
+    items: [
+      "I ask team members how they are doing — not only about tasks.",
+      "When I notice tension, I address it early rather than avoiding it.",
+      "I invite team members to raise concerns directly with me.",
+      "During conversations, I allow others to finish before responding.",
+      "When something goes wrong, I ask for clarification before reacting.",
+      "I react in ways that make people cautious around me."
+    ]
+  },
+  vulnerability: {
+    title: "Personality (willingness to be vulnerable / psychological safety)",
+    desc: "Trust grows when people feel safe to speak up around you. This part is about calm reactions, openness, and learning from mistakes.",
+    items: [
+      "I admit when I don’t have all the answers.",
+      "I respond constructively when someone disagrees with me.",
+      "When mistakes happen, I focus on learning rather than blame.",
+      "I invite alternative viewpoints before finalizing decisions.",
+      "I keep a steady tone and respectful language in difficult conversations.",
+      "I react strongly in a way that shuts down discussion."
+    ]
+  }
+};
+
+const clusterNames = {
+  context: "Context Trust",
+  relationship: "Mutual Relationship Trust",
+  vulnerability: "Personality (Vulnerability) Trust"
+};
+
+const thresholds = [
+  { min: 85, tag: "Strong", css: "strong" },
+  { min: 70, tag: "Stable but Fragile", css: "fragile" },
+  { min: 55, tag: "At Risk", css: "risk" },
+  { min: 0,  tag: "Active Erosion", css: "erosion" },
+];
+
+function band(pct){ return thresholds.find(t => pct >= t.min); }
+function pct(numerator, denom){ return Math.round((numerator/denom)*100); }
+
+/* Driver feedback */
+function feedbackFor(clusterKey, pctValue){
+  const b = band(pctValue);
+  const fb = {
+    context: {
+      Strong: { title: "You Lead with Predictability", body: "Your clarity and consistency look strong. Maintain this under pressure by announcing changes early and reinforcing priorities." },
+      "Stable but Fragile": { title: "Clear — But Not Always Consistent", body: "Your team generally understands expectations, but under stress clarity may weaken. The journey sharpens your consistency during tension." },
+      "At Risk": { title: "Uncertainty May Be Growing", body: "Ambiguity may exist in priorities, delegation, or decision transparency. You’ll practice clarity resets and stable standards." },
+      "Active Erosion": { title: "Structural Clarity Needs Repair", body: "Predictability may be low. Start rebuilding trust through visible clarity: priorities, reasoning, and consistent follow-through." }
+    },
+    relationship: {
+      Strong: { title: "Visible Care and Goodwill", body: "Care behaviors are visible. Keep it strong by addressing small tensions early and listening fully before judging." },
+      "Stable but Fragile": { title: "Professional — But Possibly Distant", body: "Respect may exist, but warmth may fluctuate. Small signals matter. You’ll strengthen visible care behaviors and enquiry-based leadership." },
+      "At Risk": { title: "Guarded Energy May Exist", body: "Some team members may hesitate before speaking openly. You’ll practice listening discipline, assumption-checking, and early tension handling." },
+      "Active Erosion": { title: "Relational Repair May Be Needed", body: "Goodwill may be weakening. Start with consistent care signals and safe, respectful conversations before pushing performance." }
+    },
+    vulnerability: {
+      Strong: { title: "Psychological Safety Appears Strong", body: "People likely challenge ideas and learn from mistakes. Protect it by staying calm and curious under pressure." },
+      "Stable but Fragile": { title: "Openness Exists — But May Fluctuate", body: "Safety may depend on the situation. Under stress, reactions matter most. You’ll refine difficult-conversation discipline and non-blame learning responses." },
+      "At Risk": { title: "Silence May Be Present", body: "Some people may hold back concerns or disagreement. You’ll practice inviting dissent and responding with learning focus." },
+      "Active Erosion": { title: "Speak-Up Safety Needs Repair", body: "People may self-protect by staying silent. Rebuild safety with steady tone, humility, and learning-first responses." }
+    }
+  };
+  const entry = fb[clusterKey][b.tag];
+  return { ...entry, band: b };
+}
+
+function overallFeedback(scores){
+  const avgPct = Math.round((scores.context.pct + scores.relationship.pct + scores.vulnerability.pct)/3);
+  const b = band(avgPct);
+
+  let title="", body="";
+  if (b.tag === "Strong"){
+    title = "Strong Trust Foundation";
+    body  = "Trust signals look strong across the model. Keep this stable under pressure by maintaining clarity, visible care, and calm reactions in difficult moments.";
+  } else if (b.tag === "Stable but Fragile"){
+    title = "Stable, But Pressure Is the Test";
+    body  = "Trust is present, but may not hold consistently under stress. Strengthen predictable leadership, care behaviors, and speak-up safety in real situations.";
+  } else if (b.tag === "At Risk"){
+    title = "Trust Is Vulnerable Right Now";
+    body  = "One or more trust signals may be weakening. Stabilize one driver first—then apply one real intervention later in the journey.";
+  } else {
+    title = "Trust Repair Needed";
+    body  = "Results suggest active erosion in at least one area. Prioritize repair behaviors and structured conversations before raising performance demands.";
+  }
+  return { avgPct, band: b, title, body };
+}
+
+function interventionOptions(primaryKey){
+  const map = {
+    context: ["Rumor confrontation workshop","Promotion conversation reset","Working environment analysis"],
+    relationship: ["Team atmosphere check","Fireside chat","Working environment analysis"],
+    vulnerability: ["Fireside chat","Promotion conversation reset","Team atmosphere check"]
+  };
+  return map[primaryKey] || [];
+}
+
+/* -----------------------------
+  RENDER QUESTIONS
+------------------------------ */
+function renderQuestions(){
+  renderCluster("qContext", "context");
+  renderCluster("qRelationship", "relationship");
+  renderCluster("qVulnerability", "vulnerability");
+}
+
+function renderCluster(containerId, key){
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = "";
+  const items = BANK[key].items;
+
+  items.forEach((text, idx) => {
+    const qNum = (key==="context") ? (idx+1) : (key==="relationship") ? (idx+7) : (idx+13);
+    const reverse = (idx === 5);
+    const vals = reverse ? VALS_REVERSED : VALS_NORMAL;
+
+    const div = document.createElement("div");
+    div.className = "q";
+    div.innerHTML = `
+      <p class="qTitle">${qNum}. ${text}</p>
+      <div class="scale">
+        ${SCALE_LABELS.map((label, i) => `
+          <label>
+            <input type="radio" name="${key}_${idx}" value="${vals[i]}">
+            <div class="opt">${label}</div>
+          </label>
+        `).join("")}
+      </div>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+/* -----------------------------
+  PAGE FLOW
+------------------------------ */
+let pageIndex = 1; // 1..3
+const pages = ["p1","p2","p3"];
+const keys  = ["context","relationship","vulnerability"];
+
+function setPage(i){
+  pageIndex = i;
+  pages.forEach((id, idx) => {
+    document.getElementById(id).classList.toggle("active", (idx+1)===i);
+  });
+
+  const key = keys[i-1];
+  document.getElementById("pageTitle").textContent = BANK[key].title;
+  document.getElementById("pageDesc").textContent  = BANK[key].desc;
+
+  document.getElementById("btnBack").disabled = (i===1);
+  document.getElementById("btnNext").textContent = (i===3) ? "Calculate Results" : "Next";
+
+  document.getElementById("err").textContent = "";
+}
+
+/* -----------------------------
+  SCORING
+------------------------------ */
+function getClusterScore(key){
+  let sum = 0;
+  for (let idx=0; idx<6; idx++){
+    const el = document.querySelector(`input[name="${key}_${idx}"]:checked`);
+    if (!el) return null;
+    sum += Number(el.value);
+  }
+  return sum;
+}
+
+function computeScores(){
+  const max = 30;
+  const c = getClusterScore("context");
+  const r = getClusterScore("relationship");
+  const v = getClusterScore("vulnerability");
+  if (c===null || r===null || v===null) return null;
+
+  return {
+    context: { raw: c, max, pct: pct(c, max) },
+    relationship: { raw: r, max, pct: pct(r, max) },
+    vulnerability: { raw: v, max, pct: pct(v, max) }
+  };
+}
+
+function primaryFocus(scores){
+  const arr = Object.entries(scores).map(([k,v]) => ({ key:k, pct:v.pct }));
+  arr.sort((a,b)=>a.pct-b.pct);
+  const low = arr[0];
+  const second = arr[1];
+  const dual = Math.abs(low.pct - second.pct) <= 5 ? [low.key, second.key] : [low.key];
+  return { primary: low.key, dual };
+}
+
+/* -----------------------------
+  RENDER RESULTS
+------------------------------ */
+function renderResults(scores){
+  const res = document.getElementById("results");
+  res.style.display = "block";
+
+  // KPI row
+  const kpiRow = document.getElementById("kpiRow");
+  kpiRow.innerHTML = "";
+
+  ["context","relationship","vulnerability"].forEach(k=>{
+    const b = band(scores[k].pct);
+    const div = document.createElement("div");
+    div.className = "kpi";
+    div.innerHTML = `
+      <div class="kpiTitle">${clusterNames[k]}</div>
+      <div class="kpiVal">${scores[k].pct}%</div>
+      <div class="kpiMeta">${scores[k].raw} / ${scores[k].max} points</div>
+      <div class="tag ${b.css}">${b.tag}</div>
+    `;
+    kpiRow.appendChild(div);
+  });
+
+  // primary focus box
+  const pf = primaryFocus(scores);
+  const focusLabels = pf.dual.map(k => BANK[k].title).join(" + ");
+
+  document.getElementById("primaryFocus").innerHTML = `
+    <h3>Primary Focus</h3>
+    <p>
+      Based on your results, your biggest leverage is: <b>${focusLabels}</b>.
+      This is where small behavior changes can create the fastest trust gains.
+    </p>
+    <p class="small" style="margin-top:10px;">
+      You will learn about all three drivers along the Trust journey.
+      When you reach <b>${focusLabels}</b>, take that opportunity to learn deeper — because this is your leverage area to focus on.
+    </p>
+    <p class="small" style="margin-top:10px;">Reminder: Trust is built in micro-moments—especially under pressure.</p>
+  `;
+
+  // overall summary
+  const overall = overallFeedback(scores);
+  document.getElementById("overallFeedback").innerHTML = `
+    <h3>Overall Summary: ${overall.title}</h3>
+    <p>${overall.body}</p>
+    <div class="tag ${overall.band.css}">Overall: ${overall.avgPct}% • ${overall.band.tag}</div>
+  `;
+
+  // driver cards
+  const ctx = feedbackFor("context", scores.context.pct);
+  const rel = feedbackFor("relationship", scores.relationship.pct);
+  const vul = feedbackFor("vulnerability", scores.vulnerability.pct);
+
+  document.getElementById("contextCard").innerHTML = driverCardHTML("context", scores.context.pct, ctx);
+  document.getElementById("relationshipCard").innerHTML = driverCardHTML("relationship", scores.relationship.pct, rel);
+  document.getElementById("vulnerabilityCard").innerHTML = driverCardHTML("vulnerability", scores.vulnerability.pct, vul);
+
+  // interventions
+  const opts = interventionOptions(pf.primary);
+  document.getElementById("interventionHint").innerHTML = `
+    <h3>Suggested “Bring Trust to Life” Intervention Options</h3>
+    <p class="small">Pick <b>ONE</b> real intervention later in the course. Based on your results, these options typically fit best:</p>
+    <ul class="small" style="margin:10px 0 0 18px;">
+      ${opts.map(x=>`<li>${x}</li>`).join("")}
+    </ul>
+    <div style="height:10px;"></div>
+    <p class="small"><b>Submission requirements:</b> Why this intervention? Which trust driver did you target? What changed?</p>
+  `;
+
+  // enable PNG + generate preview immediately
+  document.getElementById("btnPng").disabled = false;
+  generateResultsPNG(scores, pf, overall, {ctx, rel, vul}, opts);
+
+  // show preview
+  document.getElementById("previewWrap").style.display = "block";
+
+  // scroll to results
+  res.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function driverCardHTML(key, pctValue, fb){
+  return `
+    <div class="driverBody">
+      <h3>${clusterNames[key]}: ${fb.title}</h3>
+      <p>${fb.body}</p>
+    </div>
+    <div class="driverFooter">
+      <span class="tag ${fb.band.css}">${pctValue}% • ${fb.band.tag}</span>
+    </div>
+  `;
+}
+
+/* -----------------------------
+  ✅ UPDATED PNG GENERATION (NO OVERLAP + LIGHTER BG + NO "TRUST" WORD + WATERMARK)
+------------------------------ */
+function wrapLines(ctx, text, maxWidth){
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = "";
+  for (const w of words){
+    const test = line ? line + " " + w : w;
+    if (ctx.measureText(test).width > maxWidth && line){
+      lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+function bandColor(css){
+  if (css==="strong") return {stroke:"rgba(126,231,135,.70)", fill:"rgba(126,231,135,.14)", text:"rgba(126,231,135,.98)"};
+  if (css==="fragile") return {stroke:"rgba(255,204,102,.80)", fill:"rgba(255,204,102,.12)", text:"rgba(255,204,102,.98)"};
+  if (css==="risk") return {stroke:"rgba(255,159,102,.80)", fill:"rgba(255,159,102,.12)", text:"rgba(255,159,102,.98)"};
+  return {stroke:"rgba(255,107,107,.85)", fill:"rgba(255,107,107,.12)", text:"rgba(255,107,107,.98)"};
+}
+
+function generateResultsPNG(scores, pf, overall, detail, interventions){
+  const canvas = document.getElementById("resultsCanvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+
+  // lighter 2-shade background
+  ctx.clearRect(0,0,W,H);
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0, "#0f1733");
+  g.addColorStop(1, "#070c1d");
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,W,H);
+
+  // subtle accent shapes
+  ctx.fillStyle = "rgba(63,194,194,.08)";
+  ctx.beginPath(); ctx.ellipse(260, 290, 460, 320, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "rgba(99,248,239,.06)";
+  ctx.beginPath(); ctx.ellipse(1020, 340, 540, 380, 0, 0, Math.PI*2); ctx.fill();
+
+  // main panel
+  const pad = 70;
+  const panelX = pad, panelY = pad, panelW = W-pad*2, panelH = H-pad*2;
+
+  ctx.fillStyle = "rgba(17,26,51,.80)";
+  roundRect(ctx, panelX, panelY, panelW, panelH, 28);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,.12)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // watermark top-right
+  ctx.save();
+  ctx.globalAlpha = 0.40;
+  ctx.fillStyle = "#eef2ff";
+  ctx.font = "600 16px Arial";
+  const wm = "Atria Learning and development";
+  const wmW = ctx.measureText(wm).width;
+  ctx.fillText(wm, panelX + panelW - 50 - wmW, panelY + 44);
+  ctx.restore();
+
+  // header
+  ctx.fillStyle = "#eef2ff";
+  ctx.font = "900 42px Arial";
+  ctx.fillText("Trust Snapshot — Results", panelX+50, panelY+90);
+
+  ctx.fillStyle = "#a9b3d1";
+  ctx.font = "600 20px Arial";
+  ctx.fillText("Context • Mutual Relationship • Personality", panelX+50, panelY+128);
+
+  function drawPill(x,y,text,css){
+    const col = bandColor(css);
+    ctx.font = "800 18px Arial";
+    const tw = ctx.measureText(text).width;
+    const pw = Math.min(tw + 34, 520);
+    ctx.fillStyle = col.fill;
+    roundRect(ctx, x, y, pw, 40, 999);
+    ctx.fill();
+    ctx.strokeStyle = col.stroke;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = col.text;
+    ctx.fillText(text, x+18, y+26);
+    return pw;
+  }
+
+  // KPI labels WITHOUT "Trust"
+  const labelPNG = {
+    context: "Context",
+    relationship: "Mutual Relationship",
+    vulnerability: "Personality"
+  };
+
+  const kpiY = panelY + 170;
+  const boxH = 150;
+  const gap = 18;
+  const innerW = panelW - 100;
+  const boxW = (innerW - gap*2) / 3;
+  const x0 = panelX + 50;
+
+  const order = ["context","relationship","vulnerability"];
+  order.forEach((k, i) => {
+    const bx = x0 + i*(boxW + gap);
+    const by = kpiY;
+    const b = band(scores[k].pct);
+    const col = bandColor(b.css);
+
+    ctx.fillStyle = "rgba(0,0,0,.16)";
+    roundRect(ctx, bx, by, boxW, boxH, 18);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.10)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#eef2ff";
+    ctx.font = "800 22px Arial";
+    ctx.fillText(labelPNG[k], bx+16, by+42);
+
+    ctx.fillStyle = col.text;
+    ctx.font = "900 44px Arial";
+    ctx.fillText(scores[k].pct + "%", bx+16, by+98);
+
+    ctx.fillStyle = "#a9b3d1";
+    ctx.font = "600 18px Arial";
+    ctx.fillText(`${scores[k].raw} / ${scores[k].max}`, bx+16, by+130);
+
+    ctx.save();
+    ctx.globalAlpha = 0.95;
+    ctx.font = "800 16px Arial";
+    ctx.fillStyle = col.text;
+    ctx.fillText(b.tag, bx+16, by+146);
+    ctx.restore();
+  });
+
+  // dynamic blocks (no overlap)
+  let y = kpiY + boxH + 22;
+
+  function drawBlock(title, bodyLines, pillText, pillCss){
+    const padX = 18;
+    const lineH = 30;
+    const titleH = 44;
+    const topPad = 22;
+    const bottomPad = 22;
+
+    const maxLines = 6;
+    const lines = bodyLines.slice(0, maxLines);
+
+    const contentH = titleH + (lines.length * lineH) + (pillText ? 60 : 0);
+    const blockH = topPad + contentH + bottomPad;
+
+    ctx.fillStyle = "rgba(0,0,0,.14)";
+    roundRect(ctx, x0, y, innerW, blockH, 18);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.10)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = "#eef2ff";
+    ctx.font = "900 26px Arial";
+    ctx.fillText(title, x0+padX, y+48);
+
+    ctx.fillStyle = "#a9b3d1";
+    ctx.font = "600 20px Arial";
+    lines.forEach((ln, idx)=>{
+      ctx.fillText(ln, x0+padX, y+84 + idx*lineH);
+    });
+
+    if (pillText){
+      drawPill(x0+padX, y + 84 + lines.length*lineH + 12, pillText, pillCss);
+    }
+
+    y += blockH + 16;
+  }
+
+  // overall
+  const overallLines = wrapLines(ctx, overall.body, innerW - 36);
+  drawBlock(
+    `Overall Summary: ${overall.title}`,
+    overallLines,
+    `Overall: ${overall.avgPct}% • ${overall.band.tag}`,
+    overall.band.css
+  );
+
+  // primary focus
+  const focusLabels = pf.dual.map(k => BANK[k].title).join(" + ");
+  const pfLine1 = `Based on your results, your biggest leverage is: ${focusLabels}.`;
+  const pfLine2 = `You will learn about all three drivers along the Trust journey. When you reach ${focusLabels}, take that opportunity to learn deeper — because this is your leverage area to focus on.`;
+  const pfLines = [
+    ...wrapLines(ctx, pfLine1, innerW - 36),
+    ...wrapLines(ctx, pfLine2, innerW - 36)
+  ];
+  drawBlock("Primary Focus", pfLines, null, "fragile");
+
+  // interventions
+  const iHead = "Pick ONE later in the course. Based on your results, these options typically fit best:";
+  const iLines = [
+    ...wrapLines(ctx, iHead, innerW - 36),
+    ...interventions.slice(0,5).map(s => `• ${s}`)
+  ];
+  drawBlock("Suggested “Bring Trust to Life” Intervention Options", iLines, null, "strong");
+
+  // footer
+  ctx.fillStyle = "#a9b3d1";
+  ctx.font = "600 18px Arial";
+  ctx.fillText("Reminder: Trust is built in micro-moments—especially under pressure.", x0+18, panelY + panelH - 38);
+
+  // preview
+  const url = canvas.toDataURL("image/png");
+  document.getElementById("previewImg").src = url;
+}
+
+function downloadPNG(){
+  const canvas = document.getElementById("resultsCanvas");
+  const url = canvas.toDataURL("image/png");
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "trust-snapshot-results.png";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/* -----------------------------
+  VALIDATION per page
+------------------------------ */
+function pageKey(i){ return keys[i-1]; }
+
+function validatePage(i){
+  const key = pageKey(i);
+  for (let idx=0; idx<6; idx++){
+    const el = document.querySelector(`input[name="${key}_${idx}"]:checked`);
+    if (!el) return false;
+  }
+  return true;
+}
+
+/* -----------------------------
+  INIT + EVENTS
+------------------------------ */
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderQuestions();
+  setPage(1);
+
+  document.getElementById("btnBack").addEventListener("click", ()=>{
+    if (pageIndex>1) setPage(pageIndex-1);
+  });
+
+  document.getElementById("btnNext").addEventListener("click", ()=>{
+    const err = document.getElementById("err");
+    err.textContent = "";
+
+    if (pageIndex===3){
+      const scores = computeScores();
+      if (!scores){
+        err.textContent = "Please answer all questions before calculating results.";
+        return;
+      }
+      renderResults(scores);
+      return;
+    }
+
+    if (!validatePage(pageIndex)){
+      err.textContent = "Please answer all 6 questions on this page to continue.";
+      return;
+    }
+    setPage(pageIndex+1);
+  });
+
+  document.getElementById("btnReset").addEventListener("click", ()=>{
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+    document.getElementById("err").textContent = "";
+    document.getElementById("results").style.display = "none";
+    document.getElementById("btnPng").disabled = true;
+    document.getElementById("previewWrap").style.display = "none";
+    document.getElementById("previewImg").src = "";
+    setPage(1);
+    document.getElementById("formCard").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+
+  document.getElementById("btnPrint").addEventListener("click", ()=> window.print());
+  document.getElementById("btnPng").addEventListener("click", ()=> downloadPNG());
+});
+</script>
+</body>
+</html>
